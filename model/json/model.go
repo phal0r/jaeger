@@ -79,6 +79,7 @@ type Span struct {
 	ProcessID     ProcessID   `json:"processID"`
 	Process       *Process    `json:"process,omitempty"`
 	Warnings      []string    `json:"warnings"`
+	Incomplete		bool 				`json:"incomplete"`
 }
 
 // Reference is a reference from one span to another

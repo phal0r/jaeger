@@ -30,6 +30,9 @@ const (
 	sampledFlag = Flags(1)
 	// debugFlag is the bit set in Flags in order to define a span as a debug span
 	debugFlag = Flags(2)
+
+	JaegerSpanType string = "jaeger"
+	ZipkinSpanType string = "zipkin"
 )
 
 // TraceID is a random 128bit identifier for a trace
@@ -58,6 +61,13 @@ type Span struct {
 	Logs          []Log         `json:"logs,omitempty"`
 	Process       *Process      `json:"process"`
 	Warnings      []string      `json:"warnings,omitempty"`
+	Incomplete		bool 					`json:"incomplete"`
+	Type					string				`json:"type,omitempty"`
+}
+
+type JaegerSpanHash struct {
+	TraceID TraceID
+ 	SpanID	SpanID
 }
 
 // Hash implements Hash from Hashable.
@@ -65,7 +75,15 @@ func (s *Span) Hash(w io.Writer) (err error) {
 	// gob is not the most efficient way, but it ensures we don't miss any fields.
 	// See BenchmarkSpanHash in span_test.go
 	enc := gob.NewEncoder(w)
-	return enc.Encode(s)
+
+	//with supporting incomplete spans the hash needs to be unique for a combination
+	//of spanId and traceId, so the final representation of the same span
+	//will overwrite the incomplete version in cassandra
+	if s.Type == JaegerSpanType {
+		return enc.Encode(JaegerSpanHash{s.TraceID, s.SpanID})
+	} else {
+		return enc.Encode(s)
+	}
 }
 
 // HasSpanKind returns true if the span has a `span.kind` tag set to `kind`.

@@ -126,7 +126,7 @@ func (s *SpanWriter) WriteSpan(span *model.Span) error {
 	if err := s.createIndex(spanIndexName, spanMapping, jsonSpan); err != nil {
 		return err
 	}
-	return s.writeSpan(spanIndexName, jsonSpan)
+	return s.writeSpan(spanIndexName, jsonSpan, span.Type)
 }
 
 func indexNames(span *model.Span) (string, string) {
@@ -171,10 +171,15 @@ func (s *SpanWriter) writeService(indexName string, jsonSpan *jModel.Span) error
 	return s.serviceWriter(indexName, jsonSpan)
 }
 
-func (s *SpanWriter) writeSpan(indexName string, jsonSpan *jModel.Span) error {
+func (s *SpanWriter) writeSpan(indexName string, jsonSpan *jModel.Span, jaegerSpanType string) error {
 	start := time.Now()
 	elasticSpan := Span{Span: jsonSpan, StartTimeMillis: jsonSpan.StartTime / 1000} // Microseconds to milliseconds
-	_, err := s.client.Index().Index(indexName).Type(spanType).BodyJson(&elasticSpan).Do(s.ctx)
+	var err error
+	if jaegerSpanType == model.JaegerSpanType {
+		_, err = s.client.Index().Index(indexName).Type(spanType).Id(string(jsonSpan.TraceID) + string(jsonSpan.SpanID)).BodyJson(&elasticSpan).Do(s.ctx)
+	} else {
+		_, err = s.client.Index().Index(indexName).Type(spanType).BodyJson(&elasticSpan).Do(s.ctx)
+	}
 	s.writerMetrics.spans.Emit(err, time.Since(start))
 	if err != nil {
 		return s.logError(jsonSpan, err, "Failed to insert span", s.logger)

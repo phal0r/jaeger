@@ -160,6 +160,7 @@ func TestSpanWriter_WriteSpan(t *testing.T) {
 						ServiceName: "service",
 					},
 					StartTime: date,
+					Type: model.JaegerSpanType,
 				}
 
 				spanIndexName := "jaeger-span-1995-04-21"
@@ -188,6 +189,8 @@ func TestSpanWriter_WriteSpan(t *testing.T) {
 
 				indexService.On("Type", stringMatcher(serviceType)).Return(indexServicePut)
 				indexService.On("Type", stringMatcher(spanType)).Return(indexSpanPut)
+
+				indexService.On("Id", mock.AnythingOfType("string")).Return(indexSpanPut)
 
 				indexServicePut.On("Id", stringMatcher("service|operation")).Return(indexServicePut)
 				indexServicePut.On("BodyJson", mock.AnythingOfType("spanstore.Service")).Return(indexServicePut)
@@ -348,12 +351,13 @@ func TestWriteSpanInternal(t *testing.T) {
 		indexService.On("Type", stringMatcher(spanType)).Return(indexService)
 		indexService.On("BodyJson", mock.AnythingOfType("*spanstore.Span")).Return(indexService)
 		indexService.On("Do", mock.AnythingOfType("*context.emptyCtx")).Return(&elastic.IndexResponse{}, nil)
+		indexService.On("Id", mock.AnythingOfType("string")).Return(indexService)
 
 		w.client.On("Index").Return(indexService)
 
 		jsonSpan := &json.Span{}
 
-		err := w.writer.writeSpan(indexName, jsonSpan)
+		err := w.writer.writeSpan(indexName, jsonSpan, model.JaegerSpanType)
 		require.NoError(t, err)
 
 		indexService.AssertNumberOfCalls(t, "Do", 1)
@@ -370,6 +374,7 @@ func TestWriteSpanInternalError(t *testing.T) {
 		indexService.On("Type", stringMatcher(spanType)).Return(indexService)
 		indexService.On("BodyJson", mock.AnythingOfType("*spanstore.Span")).Return(indexService)
 		indexService.On("Do", mock.AnythingOfType("*context.emptyCtx")).Return(nil, errors.New("span insertion error"))
+		indexService.On("Id", mock.AnythingOfType("string")).Return(indexService)
 
 		w.client.On("Index").Return(indexService)
 
@@ -378,7 +383,7 @@ func TestWriteSpanInternalError(t *testing.T) {
 			SpanID:  json.SpanID("0"),
 		}
 
-		err := w.writer.writeSpan(indexName, jsonSpan)
+		err := w.writer.writeSpan(indexName, jsonSpan, model.JaegerSpanType)
 		assert.EqualError(t, err, "Failed to insert span: span insertion error")
 
 		indexService.AssertNumberOfCalls(t, "Do", 1)

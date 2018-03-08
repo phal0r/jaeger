@@ -114,6 +114,13 @@ func (m *Store) WriteSpan(span *model.Span) error {
 	if _, ok := m.traces[span.TraceID]; !ok {
 		m.traces[span.TraceID] = &model.Trace{}
 	}
+
+	for i := range m.traces[span.TraceID].Spans {
+	    if m.traces[span.TraceID].Spans[i].SpanID == span.SpanID {
+	        m.traces[span.TraceID].Spans[i] = span;
+	        return nil
+	    }
+	}
 	m.traces[span.TraceID].Spans = append(m.traces[span.TraceID].Spans, span)
 
 	return nil

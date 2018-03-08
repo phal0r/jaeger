@@ -6,6 +6,7 @@
     "operationName":"get",
     "startTime":"2017-01-26T16:46:31.639875-05:00",
     "duration":22938000,
+    "type": "jaeger",
     "tags":[
       {
         "key":"http.url",

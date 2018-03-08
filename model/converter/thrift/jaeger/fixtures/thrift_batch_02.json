@@ -11,6 +11,7 @@
       "operationName": "get",
       "startTime": 1485467191639875,
       "duration": 22938,
+      "type": "jaeger",
       "tags": [
         {
           "key": "peer.service",

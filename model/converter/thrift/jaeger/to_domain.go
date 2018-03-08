@@ -70,6 +70,8 @@ func (td toDomain) transformSpan(jSpan *jaeger.Span, mProcess *model.Process) *m
 		Tags:          tags,
 		Logs:          td.getLogs(jSpan.Logs),
 		Process:       mProcess,
+		Incomplete: 	 jSpan.Incomplete,
+		Type:					 model.JaegerSpanType,
 	}
 }
 
