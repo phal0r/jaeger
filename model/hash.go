@@ -28,9 +28,9 @@ type Hashable interface {
 
 // HashCode calcualtes a FNV-1a hash code for a Hashable object.
 func HashCode(o Hashable) (uint64, error) {
-		h := fnv.New64a()
-		if err := o.Hash(h); err != nil {
-			return 0, err
-		}
-		return h.Sum64(), nil
+	h := fnv.New64a()
+	if err := o.Hash(h); err != nil {
+		return 0, err
+	}
+	return h.Sum64(), nil
 }

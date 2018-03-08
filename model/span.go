@@ -30,8 +30,9 @@ const (
 	sampledFlag = Flags(1)
 	// debugFlag is the bit set in Flags in order to define a span as a debug span
 	debugFlag = Flags(2)
-
+	// JaegerSpanType constant to distinguish between spans from jaeger clients and zipkin clients
 	JaegerSpanType string = "jaeger"
+	// ZipkinSpanType constant to distinguish between spans from jaeger clients and zipkin clients
 	ZipkinSpanType string = "zipkin"
 )
 
@@ -61,13 +62,14 @@ type Span struct {
 	Logs          []Log         `json:"logs,omitempty"`
 	Process       *Process      `json:"process"`
 	Warnings      []string      `json:"warnings,omitempty"`
-	Incomplete		bool 					`json:"incomplete"`
-	Type					string				`json:"type,omitempty"`
+	Incomplete    bool          `json:"incomplete"`
+	Type          string        `json:"type,omitempty"`
 }
 
+// JaegerSpanHash represents the hashing implementation for spans from jaeger clients
 type JaegerSpanHash struct {
 	TraceID TraceID
- 	SpanID	SpanID
+	SpanID  SpanID
 }
 
 // Hash implements Hash from Hashable.
@@ -81,9 +83,8 @@ func (s *Span) Hash(w io.Writer) (err error) {
 	//will overwrite the incomplete version in cassandra
 	if s.Type == JaegerSpanType {
 		return enc.Encode(JaegerSpanHash{s.TraceID, s.SpanID})
-	} else {
-		return enc.Encode(s)
 	}
+	return enc.Encode(s)
 }
 
 // HasSpanKind returns true if the span has a `span.kind` tag set to `kind`.

@@ -160,7 +160,7 @@ func TestSpanWriter_WriteSpan(t *testing.T) {
 						ServiceName: "service",
 					},
 					StartTime: date,
-					Type: model.JaegerSpanType,
+					Type:      model.JaegerSpanType,
 				}
 
 				spanIndexName := "jaeger-span-1995-04-21"
